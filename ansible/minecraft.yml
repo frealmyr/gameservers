@@ -1,0 +1,69 @@
+---
+- hosts: all
+  become: true
+  tasks:  
+    - name: Install dependencies
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+        - curl 
+        - wget 
+        - file 
+        - tar 
+        - bzip2 
+        - gzip 
+        - unzip 
+        - bsdmainutils 
+        - python
+        - python-apt
+        - util-linux 
+        - ca-certificates 
+        - binutils 
+        - bc 
+        - jq 
+        - tmux 
+        - netcat 
+        - openjdk-17-jre
+
+    - name: Install nodejs (Used by GameDig)
+      args:
+        warn: false
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+        apt-get update && \
+        apt-get install -y nodejs
+
+    - name: Install GameDig
+      command: npm install gamedig -g
+    
+    - name: Download LinuxGSM script
+      get_url:
+        url: https://linuxgsm.sh
+        dest: /home/vagrant/linuxgsm.sh
+        mode: '755'
+      become_user: vagrant
+
+    - name: Prepare installer
+      command: bash linuxgsm.sh mcserver
+      become_user: vagrant
+
+    - name: Install game server
+      command: ./mcserver auto-install
+      become_user: vagrant
+
+    - name: Create cron jobs
+      args:
+        warn: false
+      shell: |
+        crontab -r && \
+        touch cron_gsm && \
+        echo "*/5 * * * * /home/mcserver/mcserver monitor > /dev/null 2>&1" >> cron_gsm && \
+        echo "0 6 * * * /home/mcserver/mcserver update > /dev/null 2>&1" >> cron_gsm && \
+        echo "50 5 * * 0 /home/mcserver/mcserver update-lgsm > /dev/null 2>&1" >> cron_gsm && \
+        crontab cron_gsm && \
+        rm cron_gsm
+      run_once: true
+      become_user: vagrant

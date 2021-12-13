@@ -1,0 +1,84 @@
+---
+- hosts: all
+  become: true
+  tasks:  
+    - name: Add 32-bit architecture
+      command: dpkg --add-architecture i386
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
+    - name: Install dependencies
+      apt:
+        name: "{{ packages }}"
+        state: present
+        update_cache: yes
+      vars:
+        packages:
+        - curl
+        - wget
+        - file
+        - tar
+        - bzip2
+        - gzip
+        - unzip
+        - bsdmainutils
+        - python
+        - python-apt
+        - util-linux
+        - ca-certificates 
+        - binutils
+        - bc
+        - jq
+        - tmux
+        - netcat
+        - lib32gcc1
+        - lib32stdc++6
+        - libsdl2-2.0-0:i386
+
+    - name: Install steamcmd
+      shell: |
+        echo steam steam/question select "I AGREE" | debconf-set-selections && \
+        echo steam steam/license note '' | debconf-set-selections && \
+        DEBIAN_FRONTEND=noninteractive apt-get install -q -y --no-install-recommends steamcmd && \
+        ln -sf /usr/games/steamcmd /usr/bin/steamcmd
+
+    - name: Install nodejs (Used by GameDig)
+      args:
+        warn: false
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \
+        apt-get update && \
+        apt-get install -y nodejs
+
+    - name: Install GameDig
+      command: npm install gamedig -g
+    
+    - name: Download LinuxGSM script
+      get_url:
+        url: https://linuxgsm.sh
+        dest: /home/vagrant/linuxgsm.sh
+        mode: '755'
+      become_user: vagrant
+
+    - name: Prepare installer
+      command: bash linuxgsm.sh sfserver
+      become_user: vagrant
+
+    - name: Install game server
+      command: ./sfserver auto-install
+      become_user: vagrant
+
+    - name: Create cron jobs
+      args:
+        warn: false
+      shell: |
+        touch cron_gsm && \
+        echo "*/5 * * * * /home/sfserver/sfserver monitor > /dev/null 2>&1" >> cron_gsm && \
+        echo "0 6 * * * /home/sfserver/sfserver update > /dev/null 2>&1" >> cron_gsm && \
+        echo "50 5 * * 0 /home/sfserver/sfserver update-lgsm > /dev/null 2>&1" >> cron_gsm && \
+        crontab cron_gsm && \
+        rm cron_gsm
+      run_once: true
+      become_user: vagrant

@@ -44,11 +44,15 @@ Vagrant.configure("2") do |config|
         libvirt.graphics_type = "none"
       end
 
-      gs.vm.provision "ansible" do |ansible|
-        ansible.raw_arguments
-        ansible.playbook = "playbooks/ubuntu-base.yml" 
-        ansible.playbook = "playbooks/#{gameserver}.yml"
+      gs.vm.provision "playbook-core", type:'ansible' do |ansible|
+        ansible.config_file = "ansible/ansible.cfg"
+        ansible.playbook = "ansible/ubuntu-base.yml" 
+      end
+
+      gs.vm.provision "playbook-gameserver", type:'ansible' do |ansible|
+        ansible.config_file = "ansible/ansible.cfg"
+        ansible.playbook = "ansible/#{gameserver}.yml"
       end
     end
   end
-end 
+end
