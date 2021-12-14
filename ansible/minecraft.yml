@@ -63,10 +63,23 @@
         warn: false
       shell: |
         touch cron_gsm && \
-        echo "*/5 * * * * /home/mcserver/mcserver monitor > /dev/null 2>&1" >> cron_gsm && \
-        echo "0 6 * * * /home/mcserver/mcserver update > /dev/null 2>&1" >> cron_gsm && \
-        echo "50 5 * * 0 /home/mcserver/mcserver update-lgsm > /dev/null 2>&1" >> cron_gsm && \
+        echo "0 7 * * * /home/vagrant/mcserver update > /dev/null 2>&1" >> cron_gsm && \
+        echo "0 6 */3 * * /home/vagrant/mcserver backup > /dev/null 2>&1" >> cron_gsm && \
+        echo "*/5 * * * * /home/vagrant/mcserver monitor > /dev/null 2>&1" >> cron_gsm && \
+        echo "50 6 * * 0 /home/vagrant/mcserver update-lgsm > /dev/null 2>&1" >> cron_gsm && \
         crontab cron_gsm && \
         rm cron_gsm
       run_once: true
       become_user: vagrant
+
+    - name: Copy common.cfg
+      ansible.builtin.copy:
+        src: ./files/common.cfg
+        dest: /home/vagrant/lgsm/config-lgsm/mcserver/common.cfg
+      become_user: vagrant
+
+    - name: Adding discord webhook
+      ansible.builtin.lineinfile:
+        path: /home/vagrant/lgsm/config-lgsm/mcserver/common.cfg
+        regexp: '^discordwebhook=""'
+        line: discordwebhook="{{ discord_webhook }}"

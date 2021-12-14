@@ -46,6 +46,9 @@ Vagrant.configure("2") do |config|
       gs.vm.box = IMAGE_NAME
       gs.vm.hostname = gameserver
 
+      gs.env.enable # fetch variables from .env file
+      gs.vm.synced_folder "./.backups/#{gameserver}", "/home/vagrant/backups", create: true
+
       gs.ssh.forward_agent = false # Do not re-use SSH key pair from host machine
       gs.vm.network :public_network,
         :dev => "br0",
@@ -68,13 +71,18 @@ Vagrant.configure("2") do |config|
       end
 
       gs.vm.provision "playbook-core", type:'ansible' do |ansible|
+        ansible.compatibility_mode = "2.0"
         ansible.config_file = "ansible/ansible.cfg"
         ansible.playbook = "ansible/ubuntu-base.yml" 
       end
 
       gs.vm.provision "playbook-gameserver", type:'ansible' do |ansible|
+        ansible.compatibility_mode = "2.0"
         ansible.config_file = "ansible/ansible.cfg"
         ansible.playbook = "ansible/#{gameserver}.yml"
+        ansible.extra_vars = {
+          discord_webhook: ENV['DISCORD_WEBHOOK'],
+        }
       end
     end
   end

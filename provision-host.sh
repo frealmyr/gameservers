@@ -13,8 +13,9 @@ sudo apt update
 echo "apt: installing vagrant, qemu and libvirt.."
 sudo apt install -f ansible vagrant qemu-kvm libvirt-daemon-system qemu-utils libvirt-dev ruby-dev
 
-echo "vagrant: installing libvirt plugin.."
+echo "vagrant: installing plugins.."
 vagrant plugin install vagrant-libvirt
+vagrant plugin install vagrant-env
 
 echo "nmcli: creating network bridge on enp2s0.."
 sudo nmcli conn add type bridge con-name br0 ifname br0 \
