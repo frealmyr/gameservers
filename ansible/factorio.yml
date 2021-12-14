@@ -2,6 +2,13 @@
 - hosts: all
   become: true
   tasks:  
+    - name: Add 32-bit architecture
+      command: dpkg --add-architecture i386
+
+    - name: Update apt packages
+      apt:
+        update_cache: yes
+
     - name: Install dependencies
       apt:
         name: "{{ packages }}"
@@ -9,24 +16,25 @@
         update_cache: yes
       vars:
         packages:
-        - curl 
-        - wget 
-        - file 
-        - tar 
-        - bzip2 
-        - gzip 
-        - unzip 
-        - bsdmainutils 
+        - curl
+        - wget
+        - file
+        - tar
+        - bzip2
+        - gzip
+        - unzip
+        - bsdmainutils
         - python
-        - python-apt
-        - util-linux 
-        - ca-certificates 
-        - binutils 
-        - bc 
-        - jq 
-        - tmux 
-        - netcat 
-        - openjdk-17-jre
+        - util-linux
+        - ca-certificates
+        - binutils
+        - bc
+        - jq
+        - tmux
+        - netcat
+        - lib32gcc1
+        - lib32stdc++6
+        - xz-utils
 
     - name: Install nodejs
       args:
@@ -47,15 +55,15 @@
       become_user: vagrant
 
     - name: Prepare installer
-      command: bash linuxgsm.sh mcserver
+      command: bash linuxgsm.sh fctrserver
       become_user: vagrant
 
     - name: Install game server
-      command: ./mcserver auto-install
+      command: ./fctrserver auto-install
       become_user: vagrant
 
-    - name: Install game server
-      command: ./mcserver start
+    - name: Start game server
+      command: ./fctrserver start
       become_user: vagrant
 
     - name: Create cron jobs
@@ -63,9 +71,9 @@
         warn: false
       shell: |
         touch cron_gsm && \
-        echo "*/5 * * * * /home/mcserver/mcserver monitor > /dev/null 2>&1" >> cron_gsm && \
-        echo "0 6 * * * /home/mcserver/mcserver update > /dev/null 2>&1" >> cron_gsm && \
-        echo "50 5 * * 0 /home/mcserver/mcserver update-lgsm > /dev/null 2>&1" >> cron_gsm && \
+        echo "*/5 * * * * /home/fctrserver/fctrserver monitor > /dev/null 2>&1" >> cron_gsm && \
+        echo "0 6 * * * /home/fctrserver/fctrserver update > /dev/null 2>&1" >> cron_gsm && \
+        echo "50 5 * * 0 /home/fctrserver/fctrserver update-lgsm > /dev/null 2>&1" >> cron_gsm && \
         crontab cron_gsm && \
         rm cron_gsm
       run_once: true

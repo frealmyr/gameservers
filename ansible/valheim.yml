@@ -16,7 +16,6 @@
         update_cache: yes
       vars:
         packages:
-        - curl
         - wget
         - file
         - tar
@@ -25,9 +24,8 @@
         - unzip
         - bsdmainutils
         - python
-        - python-apt
         - util-linux
-        - ca-certificates 
+        - ca-certificates
         - binutils
         - bc
         - jq
@@ -63,15 +61,15 @@
       become_user: vagrant
 
     - name: Prepare installer
-      command: bash linuxgsm.sh sfserver
+      command: bash linuxgsm.sh vhserver
       become_user: vagrant
 
     - name: Install game server
-      command: ./sfserver auto-install
+      command: ./vhserver auto-install
       become_user: vagrant
 
     - name: Install game server
-      command: ./sfserver start
+      command: ./vhserver start
       become_user: vagrant
 
     - name: Create cron jobs
@@ -79,9 +77,9 @@
         warn: false
       shell: |
         touch cron_gsm && \
-        echo "*/5 * * * * /home/sfserver/sfserver monitor > /dev/null 2>&1" >> cron_gsm && \
-        echo "0 6 * * * /home/sfserver/sfserver update > /dev/null 2>&1" >> cron_gsm && \
-        echo "50 5 * * 0 /home/sfserver/sfserver update-lgsm > /dev/null 2>&1" >> cron_gsm && \
+        echo "*/5 * * * * /home/vhserver/vhserver monitor > /dev/null 2>&1" >> cron_gsm && \
+        echo "0 6 * * * /home/vhserver/vhserver update > /dev/null 2>&1" >> cron_gsm && \
+        echo "50 5 * * 0 /home/vhserver/vhserver update-lgsm > /dev/null 2>&1" >> cron_gsm && \
         crontab cron_gsm && \
         rm cron_gsm
       run_once: true
