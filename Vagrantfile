@@ -8,14 +8,14 @@ exit unless REQUIRED_PLUGINS_LIBVIRT.all? do |plugin|
   )
 end
 
-# Base image for all gameserver VMs
-IMAGE_NAME = "generic/ubuntu2004"
+IMAGE_NAME = "generic/ubuntu2004" # Base image for all gameserver VMs
+ROUTER_IP = "10.0.0.1" # Needed for routing traffic to WAN, else only LAN will work
 
 gameservers = {
   "factorio" => {
     :cpus => 2, 
     :memory => 8196,
-    :ip => "10.0.0.252",
+    :ip => "10.0.0.250",
     :bootstart => false
   },
   "minecraft" => {
@@ -27,7 +27,7 @@ gameservers = {
   "satisfactory" => {
     :cpus => 4, 
     :memory => 12288,
-    :ip => "10.0.0.250",
+    :ip => "10.0.0.252",
     :bootstart => true
   },
   "valheim" => {
@@ -50,12 +50,12 @@ Vagrant.configure("2") do |config|
       gs.vm.synced_folder "./.backups/#{gameserver}", "/home/vagrant/backups", create: true
 
       gs.ssh.forward_agent = false # Do not re-use SSH key pair from host machine
+
       gs.vm.network :public_network,
         :dev => "br0",
         :mode => "virtio",
         :type => "bridge",
-        ip: spec[:ip],
-        auto_config: true
+        ip: spec[:ip]
 
       gs.vm.provider :libvirt do |libvirt|
         libvirt.autostart = spec[:bootstart]
@@ -73,7 +73,10 @@ Vagrant.configure("2") do |config|
       gs.vm.provision "playbook-core", type:'ansible' do |ansible|
         ansible.compatibility_mode = "2.0"
         ansible.config_file = "ansible/ansible.cfg"
-        ansible.playbook = "ansible/ubuntu-base.yml" 
+        ansible.playbook = "ansible/ubuntu-base.yml"
+        ansible.extra_vars = {
+          router_ip: ROUTER_IP,
+        }
       end
 
       gs.vm.provision "playbook-gameserver", type:'ansible' do |ansible|
@@ -81,7 +84,7 @@ Vagrant.configure("2") do |config|
         ansible.config_file = "ansible/ansible.cfg"
         ansible.playbook = "ansible/#{gameserver}.yml"
         ansible.extra_vars = {
-          discord_webhook: ENV['DISCORD_WEBHOOK'],
+          discord_webhook: ENV["webhook_#{gameserver}"],
         }
       end
     end

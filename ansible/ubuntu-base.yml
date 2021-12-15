@@ -2,19 +2,29 @@
 - hosts: all
   become: true
   tasks:
-    - name: update apt packages
+    - name: Update apt packages
       apt:
         update_cache: yes
         cache_valid_time: 3600
 
-    - name: upgrade apt packages
+    - name: Install net-tools
+      apt:
+        name: net-tools
+        state: present
+
+    - name: Upgrade apt packages
       apt:
         upgrade: full
 
-    - name: clean & remove apt packages
+    - name: Clean & remove apt packages
       apt:
         autoclean: yes
         autoremove: yes
     
-    - name: disable swap
+    - name: Disable swap
       command: swapoff -a  
+
+    - name: Fix routing
+      shell: |
+        route add default gw {{ router_ip }}
+        eval `route -n | awk '{ if ($8 =="eth0" && $2 != "0.0.0.0") print "route del default gw " $2; }'`
