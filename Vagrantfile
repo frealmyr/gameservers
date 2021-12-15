@@ -51,9 +51,9 @@ Vagrant.configure("2") do |config|
 
       gs.ssh.forward_agent = false # Do not re-use SSH key pair from host machine
 
-      gs.vm.network :public_network,
+      gs.vm.network :public_network, 
         :dev => "br0",
-        :mode => "virtio",
+        :mode => "bridge",
         :type => "bridge",
         ip: spec[:ip]
 
@@ -68,6 +68,7 @@ Vagrant.configure("2") do |config|
         libvirt.sound_type = nil
         libvirt.video_type = "none"
         libvirt.video_vram = "0"
+        libvirt.nic_model_type = "virtio-net-pci" # to verify: virsh dumpxml gameservers_factorio | grep network -A5
       end
 
       gs.vm.provision "playbook-core", type:'ansible' do |ansible|
