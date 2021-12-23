@@ -50,7 +50,6 @@ Vagrant.configure("2") do |config|
       gs.vm.synced_folder "./.backups/#{gameserver}", "/home/vagrant/backups", create: true
 
       gs.ssh.forward_agent = false # Do not re-use SSH key pair from host machine
-
       gs.vm.network :public_network, 
         :dev => "br0",
         :mode => "bridge",
@@ -63,12 +62,13 @@ Vagrant.configure("2") do |config|
         libvirt.cpus = spec[:cpus]
         libvirt.disk_driver :cache => "writeback", :io => "threads" # Significantly increase guest I/O speed, as disk R/W is cached in the host memory pool. Only use aio=native on only fully preallocated volumes.
         libvirt.driver = "kvm"
+        libvirt.features = ['acpi', 'apic', 'pae', 'hap'] #  Enables the use of hardware assisted paging if it is available in the hardware. 
         libvirt.graphics_type = "none"
         libvirt.memory = spec[:memory]
+        libvirt.nic_model_type = "virtio-net-pci" # to verify: virsh dumpxml gameservers_factorio | grep network -A5
         libvirt.sound_type = nil
         libvirt.video_type = "none"
         libvirt.video_vram = "0"
-        libvirt.nic_model_type = "virtio-net-pci" # to verify: virsh dumpxml gameservers_factorio | grep network -A5
       end
 
       gs.vm.provision "playbook-core", type:'ansible' do |ansible|
